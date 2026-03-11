@@ -3,6 +3,7 @@ export namespace git {
 	export class Branch {
 	    Name: string;
 	    IsHead: boolean;
+	    IsRemote: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new Branch(source);
@@ -12,6 +13,7 @@ export namespace git {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.Name = source["Name"];
 	        this.IsHead = source["IsHead"];
+	        this.IsRemote = source["IsRemote"];
 	    }
 	}
 	export class Commit {

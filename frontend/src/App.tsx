@@ -12,6 +12,28 @@ function App() {
   const [commitMessage, setCommitMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [splitPosition, setSplitPosition] = useState({ left: 200, middle: 550 });
+  const [dragTarget, setDragTarget] = useState<'left' | 'middle' | null>(null);
+
+  const handleMouseDown = (target: 'left' | 'middle') => (e: React.MouseEvent) => {
+    e.preventDefault();
+    setDragTarget(target);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!dragTarget) return;
+    if (dragTarget === 'left') {
+      const newLeft = Math.max(150, Math.min(splitPosition.middle - 250, e.clientX));
+      setSplitPosition(prev => ({ ...prev, left: newLeft }));
+    } else if (dragTarget === 'middle') {
+      const newMiddle = Math.max(splitPosition.left + 250, Math.min(e.clientX, window.innerWidth - 350));
+      setSplitPosition(prev => ({ ...prev, middle: newMiddle }));
+    }
+  };
+
+  const handleMouseUp = () => {
+    setDragTarget(null);
+  };
 
   const loadStatus = async () => {
     if (!repoPath) return;
@@ -73,6 +95,7 @@ function App() {
 
   const loadDiff = async (file: git.FileStatus) => {
     setSelectedFile(file);
+    setError('');
     try {
       // For untracked files, directly read file content
       if (file.Status === 'untracked') {
@@ -135,7 +158,13 @@ function App() {
         return;
       }
       
+      // Reset all state for new repository
       setRepoPath(path);
+      setFiles([]);
+      setBranches([]);
+      setCurrentBranch('');
+      setSelectedFile(null);
+      setDiff('');
       setError('');
       await loadStatus();
       await loadBranches();
@@ -362,10 +391,12 @@ function App() {
         </div>
       </div>
 
-      {error && <div className="error-bar">{error}</div>}
+      <div className={`status-bar ${error ? 'has-error' : ''}`}>
+        {error || 'No errors'}
+      </div>
 
-      <div className="main">
-        <div className="sidebar">
+      <div className="main" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+        <div className="sidebar" style={{ width: splitPosition.left }}>
           <div className="repo-info">
             {repoPath ? (
               <>
@@ -379,7 +410,9 @@ function App() {
                     disabled={currentBranch.startsWith('(detached')}
                   >
                     {branches.map(b => (
-                      <option key={b.Name} value={b.Name}>{b.Name}</option>
+                      <option key={`${b.IsRemote ? 'remote-' : 'local-'}${b.Name}`} value={b.Name}>
+                        {b.IsRemote ? '🌐 ' : ''}{b.Name}
+                      </option>
                     ))}
                   </select>
                   {currentBranch.startsWith('(detached') && (
@@ -393,7 +426,9 @@ function App() {
           </div>
         </div>
 
-        <div className="content">
+        <div className="resize-handle" onMouseDown={handleMouseDown('left')}></div>
+
+        <div className="content" style={{ width: splitPosition.middle - splitPosition.left }}>
           {repoPath ? (
             <div className="changes-panel">
               <div className="staged-section">
@@ -493,6 +528,8 @@ function App() {
           )}
         </div>
 
+        <div className="resize-handle" onMouseDown={handleMouseDown('middle')}></div>
+
         <div className="diff-panel">
           {selectedFile ? (
             <>
@@ -552,47 +589,63 @@ function parseDiff(content: string): DiffHunk[] {
 }
 
 function DiffViewer({ content }: { content: string }) {
-  const [expandedHunks, setExpandedHunks] = useState<Set<number>>(new Set());
-  const [showFull, setShowFull] = useState(false);
+  const [expandedHunks, setExpandedHunks] = useState<Set<number>>(new Set([0, 1, 2]));
+  const [showAll, setShowAll] = useState(false);
 
   if (!content) return <div className="diff-empty">No changes to display</div>;
 
   const hunks = parseDiff(content);
   const totalLines = hunks.reduce((sum, h) => sum + h.lines.length, 0);
-  const isLargeDiff = totalLines > 50;
+  const isLargeDiff = hunks.length > 3;
 
   const toggleHunk = (index: number) => {
     setExpandedHunks(prev => {
       const next = new Set(prev);
-      if (next.has(index)) next.delete(index);
-      else next.add(index);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
       return next;
     });
   };
 
-  const toggleFull = () => {
-    setShowFull(!showFull);
+  const toggleShowAll = () => {
+    if (showAll) {
+      // Collapse back to default (first 3)
+      const initial = new Set<number>();
+      for (let i = 0; i < Math.min(3, hunks.length); i++) {
+        initial.add(i);
+      }
+      setExpandedHunks(initial);
+    } else {
+      // Expand all
+      const all = new Set<number>();
+      for (let i = 0; i < hunks.length; i++) {
+        all.add(i);
+      }
+      setExpandedHunks(all);
+    }
+    setShowAll(!showAll);
   };
 
-  // Display logic: show first 3 hunks by default, expand on click
-  const displayHunks = isLargeDiff && !showFull ? hunks.slice(0, 3) : hunks;
+  const displayHunks = showAll ? hunks : hunks.slice(0, 3);
 
   return (
     <div className="diff-viewer">
       {isLargeDiff && (
         <div className="diff-summary">
           <span>{hunks.length} hunks, {totalLines} lines</span>
-          <button onClick={toggleFull} className="diff-expand-btn">
-            {showFull ? 'Collapse' : 'Show all changes'}
+          <button onClick={toggleShowAll} className="diff-expand-btn">
+            {showAll ? 'Collapse' : 'Show all changes'}
           </button>
         </div>
       )}
       {displayHunks.map((hunk, hunkIndex) => {
-        const actualIndex = isLargeDiff && !showFull ? hunkIndex : hunkIndex;
-        const isExpanded = showFull || expandedHunks.has(actualIndex);
+        const isExpanded = expandedHunks.has(hunkIndex);
         return (
           <div key={hunkIndex} className="diff-hunk">
-            <div className="diff-hunk-header" onClick={() => toggleHunk(actualIndex)}>
+            <div className="diff-hunk-header" onClick={() => toggleHunk(hunkIndex)}>
               <span className="diff-hunk-expand">{isExpanded ? '▼' : '▶'}</span>
               <span>{hunk.header}</span>
             </div>

@@ -39,8 +39,9 @@ type Commit struct {
 }
 
 type Branch struct {
-	Name   string
-	IsHead bool
+	Name     string
+	IsHead   bool
+	IsRemote bool
 }
 
 type DiffResult struct {
@@ -192,6 +193,7 @@ func (r *Repository) GetBranches() ([]Branch, error) {
 	}
 
 	var branches []Branch
+	var localBranchNames []string
 	lines := strings.Split(string(output), "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -203,26 +205,55 @@ func (r *Repository) GetBranches() ([]Branch, error) {
 		name := strings.TrimPrefix(line, "* ")
 		name = strings.TrimSpace(name)
 
-		// Skip specific branches: remotes/origin/HEAD (the reference pointer)
-		if strings.HasPrefix(name, "remotes/origin/HEAD") {
+		// Skip problematic branches
+		// 1. remotes/origin/HEAD (the reference pointer, not an actual branch)
+		if name == "remotes/origin/HEAD" {
 			continue
 		}
 
+		// Detect if this is a remote branch
+		isRemote := strings.HasPrefix(name, "remotes/")
+
+		// For local branches, extract and store the name for duplicate filtering
+		if !isRemote {
+			localBranchNames = append(localBranchNames, name)
+		}
+
 		branches = append(branches, Branch{
-			Name:   name,
-			IsHead: isHead,
+			Name:     name,
+			IsHead:   isHead,
+			IsRemote: isRemote,
 		})
+	}
+
+	// Filter out remote branches that have the same name as local branches
+	// (happens when user checks out a remote branch, creating a local copy)
+	localSet := make(map[string]bool)
+	for _, name := range localBranchNames {
+		localSet[name] = true
+	}
+
+	filteredBranches := make([]Branch, 0)
+	for _, b := range branches {
+		if b.IsRemote {
+			// Extract branch name after "remotes/origin/"
+			remoteName := strings.TrimPrefix(b.Name, "remotes/origin/")
+			if localSet[remoteName] {
+				continue // Skip this remote branch, local version exists
+			}
+		}
+		filteredBranches = append(filteredBranches, b)
 	}
 
 	// Re-check current branch if we have one
 	currentBranch, err := r.GetCurrentBranch()
 	if err == nil && currentBranch != "" {
-		for i := range branches {
-			branches[i].IsHead = (branches[i].Name == currentBranch)
+		for i := range filteredBranches {
+			filteredBranches[i].IsHead = (filteredBranches[i].Name == currentBranch)
 		}
 	}
 
-	return branches, nil
+	return filteredBranches, nil
 }
 
 func (r *Repository) GetCurrentBranch() (string, error) {
@@ -250,23 +281,30 @@ func (r *Repository) GetCurrentBranch() (string, error) {
 func (r *Repository) CheckoutBranch(branchName string) error {
 	var cmd *exec.Cmd
 
-	// Handle remote branches
+	// Handle remote branches (remotes/origin/xxx)
 	if strings.HasPrefix(branchName, "remotes/") {
-		// Extract the actual branch name from remotes/origin/branch
+		// Extract the branch name after remotes/origin/
 		parts := strings.SplitN(branchName, "/", 3)
 		if len(parts) >= 3 {
-			localName := parts[2]
-			remoteBranch := branchName
-			cmd = exec.Command("git", "checkout", "-b", localName, "--track", remoteBranch)
+			remoteBranch := parts[2]
+			// Try to checkout existing local branch first, or create new one
+			cmd = exec.Command("git", "checkout", "-b", remoteBranch, "--track", branchName)
 		} else {
-			cmd = exec.Command("git", "checkout", branchName)
+			cmd = exec.Command("git", "checkout", "-b", branchName)
 		}
 	} else {
+		// Local branch - just checkout
 		cmd = exec.Command("git", "checkout", branchName)
 	}
 
 	hideWindowCmd(cmd).Dir = r.Path
 	_, err := cmd.Output()
+	if err != nil {
+		// If checkout failed, try with force
+		cmd = exec.Command("git", "checkout", "-B", branchName)
+		hideWindowCmd(cmd).Dir = r.Path
+		_, err = cmd.Output()
+	}
 	return err
 }
 

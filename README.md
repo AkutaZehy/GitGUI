@@ -1,5 +1,10 @@
 # GitGUI
 
+[![wails](https://img.shields.io/badge/Wails-v2.11.0-3066a1.svg)](https://github.com/wailsapp/wails)
+[![platform](https://img.shields.io/badge/platform-Windows-blue.svg)](https://github.com/lxyzz/GitGUI)
+[![license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/lxyzz/GitGUI/blob/main/LICENSE)
+[![stars](https://img.shields.io/github/stars/lxyzz/GitGUI?style=social)](https://github.com/lxyzz/GitGUI)
+
 一款面向中高级开发者的跨平台桌面 Git 客户端。
 
 ## 核心理念
@@ -17,28 +22,40 @@
 
 ## 功能特性
 
-### MVP 1：基础骨架 ✅
+### 已完成
 
-- 仓库管理（打开本地仓库）
-- 文件状态查看（未跟踪/已修改/已暂存）
-- Diff 查看（彩色显示，支持折叠展开）
-- Staging 与提交（整文件级）
-- 同步操作（Pull / Push / Fetch）
+- **仓库管理** - 打开本地 Git 仓库
+- **分支管理** - 查看并切换本地/远程分支
+- **文件状态** - 展示未跟踪/已修改/已暂存文件
+- **Diff 查看** - 彩色显示，支持折叠/展开
+- **Staging** - 暂存/取消暂存文件
+- **提交** - 提交已暂存的更改
+- **同步操作** - Fetch / Pull / Push
+- **可调节面板** - 拖拽分隔条调整三栏布局
+- **暗黑主题** - 舒适的眼部体验
 
-### MVP 2：终端贯通（开发中）
+### 开发中 (MVP 2)
 
 - 嵌入式终端
 - 状态自动同步
 - 快捷入口
 
-### MVP 3：篡改记录 + 交互式节点（规划中）
+### 规划中 (MVP 3)
 
 - Reset / Cherry-pick
 - 分支图可视化
 - 交互式 Rebase
 - 冲突解决 UI
+- 行级 Staging
+- Worktree 管理
 
 ## 快速开始
+
+### 环境要求
+
+- Go 1.18+
+- Node.js 18+
+- Git
 
 ### 开发模式
 
@@ -53,6 +70,36 @@ wails build
 ```
 
 构建产物位于 `build/bin/gitgui.exe`
+
+## 使用方法
+
+### 1. 打开仓库
+
+点击工具栏「Open Repository」按钮，选择本地 Git 仓库目录。
+
+### 2. 查看变更
+
+- **Staged Changes** - 已暂存的更改
+- **Changes** - 未暂存的更改
+
+点击文件可查看 Diff 详情。
+
+### 3. 暂存与提交
+
+- 点击文件旁的 `+` 按钮暂存文件
+- 点击 `-` 按钮取消暂存
+- 填写提交信息后点击「Commit」提交
+
+### 4. 分支操作
+
+- 从下拉菜单切换分支
+- 远程分支显示 🌐 图标
+
+### 5. 同步
+
+- **Fetch** - 获取远程更新
+- **Pull** - 拉取并合并
+- **Push** - 推送到远程
 
 ## 项目结构
 
@@ -83,18 +130,15 @@ GitGUI/
 |         +------------------------------------+                 |
 |         |  提交区域                          |                 |
 +---------+------------------------------------+------------------+
-|  底部面板（MVP 2：嵌入式终端）                                |
+|  状态栏：错误信息 / 无错误                                 |
 +------------------------------------------------------------------+
 ```
 
-## 后续版本计划
+## 致谢
 
-- 行级 Staging
-- Worktree 管理
-- 双栏 Diff
-- 语法高亮
-- Submodule 管理
+- **JetBrains Mono** - [GitHub](https://github.com/JetBrains/JetBrainsMono)
+- **LXGW Neo XiHei** - [GitHub](https://github.com/lxgw/LxgwNeoXiHei)
 
 ## 许可证
 
-MIT
+[MIT](./LICENSE)
