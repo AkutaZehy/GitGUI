@@ -12,8 +12,9 @@ function App() {
   const [commitMessage, setCommitMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [splitPosition, setSplitPosition] = useState({ left: 200, middle: 550 });
+  const [splitPosition, setSplitPosition] = useState({ left: '20%', middle: '70%' });
   const [dragTarget, setDragTarget] = useState<'left' | 'middle' | null>(null);
+  const [tip, setTip] = useState('');
 
   const handleMouseDown = (target: 'left' | 'middle') => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -22,12 +23,14 @@ function App() {
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!dragTarget) return;
+    const totalWidth = window.innerWidth;
+    const percentage = (e.clientX / totalWidth) * 100;
     if (dragTarget === 'left') {
-      const newLeft = Math.max(150, Math.min(splitPosition.middle - 250, e.clientX));
-      setSplitPosition(prev => ({ ...prev, left: newLeft }));
+      const newLeft = Math.max(10, Math.min(40, percentage));
+      setSplitPosition(prev => ({ ...prev, left: `${newLeft}%` }));
     } else if (dragTarget === 'middle') {
-      const newMiddle = Math.max(splitPosition.left + 250, Math.min(e.clientX, window.innerWidth - 350));
-      setSplitPosition(prev => ({ ...prev, middle: newMiddle }));
+      const newMiddle = Math.max(parseFloat(splitPosition.left) + 20, Math.min(90, percentage));
+      setSplitPosition(prev => ({ ...prev, middle: `${newMiddle}%` }));
     }
   };
 
@@ -260,19 +263,23 @@ function App() {
 
   const handlePull = async () => {
     setLoading(true);
+    setTip('Pulling...');
     try {
       const result = await window.go.main.App.Pull();
       const [output, err] = Array.isArray(result) ? result : [result, null];
       if (err) {
         setError(err);
+        setTip('');
       } else {
         setError('');
-        if (output) alert(output);
+        setTip(output || 'Pull completed');
+        setTimeout(() => setTip(''), 3000);
       }
       await loadStatus();
     } catch (e) {
       console.error("Pull error:", e);
       setError(String(e));
+      setTip('');
     } finally {
       setLoading(false);
     }
@@ -280,18 +287,22 @@ function App() {
 
   const handlePush = async () => {
     setLoading(true);
+    setTip('Pushing...');
     try {
       const result = await window.go.main.App.Push();
       const [output, err] = Array.isArray(result) ? result : [result, null];
       if (err) {
         setError(err);
+        setTip('');
       } else {
         setError('');
-        if (output) alert(output);
+        setTip(output || 'Push completed');
+        setTimeout(() => setTip(''), 3000);
       }
     } catch (e) {
       console.error("Push error:", e);
       setError(String(e));
+      setTip('');
     } finally {
       setLoading(false);
     }
@@ -318,11 +329,12 @@ function App() {
 
   const handleCheckout = async (branchName: string) => {
     if (branchName === currentBranch) return;
+    setTip(`Switching to ${branchName}...`);
     try {
       const err = await window.go.main.App.CheckoutBranch(branchName);
       if (err) {
         setError(err);
-        alert(err);
+        setTip('');
         return;
       }
       setCurrentBranch(branchName);
@@ -330,10 +342,13 @@ function App() {
       await loadStatus();
       setSelectedFile(null);
       setDiff('');
+      setError('');
+      setTip(`Switched to ${branchName}`);
+      setTimeout(() => setTip(''), 3000);
     } catch (e) {
       console.error("CheckoutBranch error:", e);
       setError(String(e));
-      alert(String(e));
+      setTip('');
     }
   };
 
@@ -385,14 +400,15 @@ function App() {
       <div className="toolbar">
         <button onClick={openRepository} disabled={loading}>Open Repository</button>
         <div className="toolbar-right">
+          <button onClick={async () => { await loadStatus(); setTip('Refreshed'); setTimeout(() => setTip(''), 2000); }} disabled={loading || !repoPath}>Refresh</button>
           <button onClick={handleFetch} disabled={loading || !repoPath}>Fetch</button>
           <button onClick={handlePull} disabled={loading || !repoPath}>Pull</button>
           <button onClick={handlePush} disabled={loading || !repoPath}>Push</button>
         </div>
       </div>
 
-      <div className={`status-bar ${error ? 'has-error' : ''}`}>
-        {error || 'No errors'}
+      <div className={`tip-bar ${error ? 'has-error' : ''} ${tip ? 'has-tip' : ''}`}>
+        {error || tip || 'Ready'}
       </div>
 
       <div className="main" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
@@ -428,7 +444,7 @@ function App() {
 
         <div className="resize-handle" onMouseDown={handleMouseDown('left')}></div>
 
-        <div className="content" style={{ width: splitPosition.middle - splitPosition.left }}>
+        <div className="content" style={{ width: `calc(${splitPosition.middle} - ${splitPosition.left})` }}>
           {repoPath ? (
             <div className="changes-panel">
               <div className="staged-section">

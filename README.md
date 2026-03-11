@@ -1,9 +1,9 @@
 # GitGUI
 
 [![wails](https://img.shields.io/badge/Wails-v2.11.0-3066a1.svg)](https://github.com/wailsapp/wails)
-[![platform](https://img.shields.io/badge/platform-Windows-blue.svg)](https://github.com/lxyzz/GitGUI)
+[![platform](https://img.shields.io/badge/platform-Windows-blue.svg)](https://github.com/AkutaZehy/GitGUI)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/lxyzz/GitGUI/blob/main/LICENSE)
-[![stars](https://img.shields.io/github/stars/lxyzz/GitGUI?style=social)](https://github.com/lxyzz/GitGUI)
+[![stars](https://img.shields.io/github/stars/AkutaZehy/GitGUI?style=social)](https://github.com/AkutaZehy/GitGUI)
 
 一款面向中高级开发者的跨平台桌面 Git 客户端。
 
@@ -30,8 +30,9 @@
 - **Diff 查看** - 彩色显示，支持折叠/展开
 - **Staging** - 暂存/取消暂存文件
 - **提交** - 提交已暂存的更改
-- **同步操作** - Fetch / Pull / Push
-- **可调节面板** - 拖拽分隔条调整三栏布局
+- **同步操作** - Refresh / Fetch / Pull / Push
+- **可调节面板** - 拖拽分隔条调整三栏布局（默认 2:5:5）
+- **Tip 通知** - 底部状态栏显示操作进度和结果
 - **暗黑主题** - 舒适的眼部体验
 
 ### 开发中 (MVP 2)
@@ -77,8 +78,9 @@ wails build
 
 点击工具栏「Open Repository」按钮，选择本地 Git 仓库目录。
 
-### 2. 查看变更
+### 2. 查看与刷新
 
+- **Refresh** - 刷新本地文件状态
 - **Staged Changes** - 已暂存的更改
 - **Changes** - 未暂存的更改
 
@@ -94,12 +96,24 @@ wails build
 
 - 从下拉菜单切换分支
 - 远程分支显示 🌐 图标
+- 切换分支时底部显示进度
 
 ### 5. 同步
 
 - **Fetch** - 获取远程更新
 - **Pull** - 拉取并合并
 - **Push** - 推送到远程
+
+### 6. 面板调节
+
+拖拽中间的分隔条可调整三栏宽度，默认比例 2:5:5。
+
+### 7. 状态通知
+
+底部 Tip Bar 显示：
+- 绿色 = Ready（就绪）
+- 蓝色 = 操作进度和结果（如 Pulling... / Push completed）
+- 红色 = 错误信息
 
 ## 项目结构
 
@@ -120,24 +134,24 @@ GitGUI/
 
 ```
 +------------------------------------------------------------------+
-|  工具栏：打开仓库 | Fetch | Pull | Push                          |
+|  工具栏：Open Repository | Refresh | Fetch | Pull | Push         |
 +------------------------------------------------------------------+
-|         |                                      |                 |
-| 侧边栏   |        变更区域 + Staging           |   Diff 详情    |
-|         |                                      |                 |
-| 分支选择 |  Staged Changes    Changes         |  彩色 diff    |
-|         |                                      |                 |
-|         +------------------------------------+                 |
-|         |  提交区域                          |                 |
-+---------+------------------------------------+------------------+
-|  状态栏：错误信息 / 无错误                                 |
-+------------------------------------------------------------------+
+|         |                                      |                |
+| 侧边栏   |        变更区域 + Staging            |   Diff 详情     |
+|         |                                      |                |
+| 分支选择 |  Staged Changes    Changes           |  彩色 diff     |
+|         |                                      |                |
+|         +--------------------------------------+                |
+|         |  提交区域                             |                |
++---------+--------------------------------------+----------------+
+|  Tip Bar：Ready / Pulling... / Push completed / Error            |
++-----------------------------------------------------------------+
 ```
 
 ## 致谢
 
-- **JetBrains Mono** - [GitHub](https://github.com/JetBrains/JetBrainsMono)
-- **LXGW Neo XiHei** - [GitHub](https://github.com/lxgw/LxgwNeoXiHei)
+- [**JetBrains Mono**](https://github.com/JetBrains/JetBrainsMono)
+- [**霞鹜新晰黑 / LXGW Neo XiHei**](https://github.com/lxgw/LxgwNeoXiHei)
 
 ## 许可证
 

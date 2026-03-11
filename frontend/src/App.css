@@ -94,15 +94,19 @@ body {
   color: white;
 }
 
-.status-bar {
+.tip-bar {
   padding: 8px 16px;
   background-color: #2d7d46;
   color: #fff;
   font-size: 13px;
 }
 
-.status-bar.has-error {
+.tip-bar.has-error {
   background-color: #f44336;
+}
+
+.tip-bar.has-tip {
+  background-color: #0066cc;
 }
 
 .main {
@@ -112,12 +116,20 @@ body {
 }
 
 .sidebar {
-  width: 220px;
   background-color: #252526;
   border-right: 1px solid #3c3c3c;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  min-width: 10%;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #3c3c3c;
+  flex-shrink: 0;
+  min-width: 20%;
 }
 
 .resize-handle {
@@ -353,7 +365,7 @@ body {
   display: flex;
   flex-direction: column;
   background-color: #1e1e1e;
-  min-width: 300px;
+  min-width: 20%;
 }
 
 .diff-header {
