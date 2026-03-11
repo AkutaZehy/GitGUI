@@ -46,16 +46,16 @@ export function GetStatus() {
   return window['go']['main']['App']['GetStatus']();
 }
 
-export function Greet(arg1) {
-  return window['go']['main']['App']['Greet'](arg1);
-}
-
 export function OpenDirectoryDialog() {
   return window['go']['main']['App']['OpenDirectoryDialog']();
 }
 
 export function OpenRepository(arg1) {
   return window['go']['main']['App']['OpenRepository'](arg1);
+}
+
+export function OpenTerminal() {
+  return window['go']['main']['App']['OpenTerminal']();
 }
 
 export function Pull() {

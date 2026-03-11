@@ -12,11 +12,11 @@ function App() {
   const [commitMessage, setCommitMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [splitPosition, setSplitPosition] = useState({ left: '20%', middle: '70%' });
-  const [dragTarget, setDragTarget] = useState<'left' | 'middle' | null>(null);
+  const [splitPosition, setSplitPosition] = useState({ left: '20%', right: '70%' });
+  const [dragTarget, setDragTarget] = useState<'left' | 'right' | null>(null);
   const [tip, setTip] = useState('');
 
-  const handleMouseDown = (target: 'left' | 'middle') => (e: React.MouseEvent) => {
+  const handleMouseDown = (target: 'left' | 'right') => (e: React.MouseEvent) => {
     e.preventDefault();
     setDragTarget(target);
   };
@@ -28,9 +28,9 @@ function App() {
     if (dragTarget === 'left') {
       const newLeft = Math.max(10, Math.min(40, percentage));
       setSplitPosition(prev => ({ ...prev, left: `${newLeft}%` }));
-    } else if (dragTarget === 'middle') {
-      const newMiddle = Math.max(parseFloat(splitPosition.left) + 20, Math.min(90, percentage));
-      setSplitPosition(prev => ({ ...prev, middle: `${newMiddle}%` }));
+    } else if (dragTarget === 'right') {
+      const newRight = Math.max(parseFloat(splitPosition.left) + 30, Math.min(90, percentage));
+      setSplitPosition(prev => ({ ...prev, right: `${newRight}%` }));
     }
   };
 
@@ -370,6 +370,19 @@ function App() {
     }
   };
 
+  const handleTerminal = async () => {
+    if (!repoPath) return;
+    try {
+      const err = await window.go.main.App.OpenTerminal();
+      if (err) {
+        setError(err);
+      }
+    } catch (e) {
+      console.error("OpenTerminal error:", e);
+      setError(String(e));
+    }
+  };
+
   const stagedFiles = files.filter(f => f.IsStaged);
   const unstagedFiles = files.filter(f => !f.IsStaged);
 
@@ -400,6 +413,7 @@ function App() {
       <div className="toolbar">
         <button onClick={openRepository} disabled={loading}>Open Repository</button>
         <div className="toolbar-right">
+          <button onClick={handleTerminal} disabled={!repoPath}>Terminal Here</button>
           <button onClick={async () => { await loadStatus(); setTip('Refreshed'); setTimeout(() => setTip(''), 2000); }} disabled={loading || !repoPath}>Refresh</button>
           <button onClick={handleFetch} disabled={loading || !repoPath}>Fetch</button>
           <button onClick={handlePull} disabled={loading || !repoPath}>Pull</button>
@@ -444,7 +458,7 @@ function App() {
 
         <div className="resize-handle" onMouseDown={handleMouseDown('left')}></div>
 
-        <div className="content" style={{ width: `calc(${splitPosition.middle} - ${splitPosition.left})` }}>
+        <div className="content" style={{ width: `calc(${splitPosition.right} - ${splitPosition.left})` }}>
           {repoPath ? (
             <div className="changes-panel">
               <div className="staged-section">
@@ -544,9 +558,9 @@ function App() {
           )}
         </div>
 
-        <div className="resize-handle" onMouseDown={handleMouseDown('middle')}></div>
+        <div className="resize-handle" onMouseDown={handleMouseDown('right')}></div>
 
-        <div className="diff-panel">
+        <div className="diff-panel" style={{ width: `calc(100% - ${splitPosition.right})` }}>
           {selectedFile ? (
             <>
               <div className="diff-header">

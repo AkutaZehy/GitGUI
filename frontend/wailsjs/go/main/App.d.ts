@@ -24,11 +24,11 @@ export function GetRepositoryPath():Promise<string>;
 
 export function GetStatus():Promise<Array<git.FileStatus>|string>;
 
-export function Greet(arg1:string):Promise<string>;
-
 export function OpenDirectoryDialog():Promise<string>;
 
 export function OpenRepository(arg1:string):Promise<boolean|string>;
+
+export function OpenTerminal():Promise<string>;
 
 export function Pull():Promise<string|string>;
 

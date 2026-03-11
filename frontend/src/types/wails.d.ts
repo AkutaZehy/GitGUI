@@ -24,6 +24,7 @@ declare global {
                     DiscardChanges(filePath: string): Promise<string>;
                     GetFileContent(filePath: string): Promise<[string, string]>;
                     OpenDirectoryDialog(): Promise<string>;
+                    OpenTerminal(): Promise<string>;
                 };
             };
         };

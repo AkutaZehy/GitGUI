@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"os/exec"
 
 	"gitgui/git"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -226,6 +226,10 @@ func (a *App) OpenDirectoryDialog() string {
 	return result
 }
 
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
+func (a *App) OpenTerminal() string {
+	if a.repository == nil {
+		return "No repository opened"
+	}
+	exec.Command("wt.exe", "--title", "GitGUI Terminal", "-d", a.repository.Path).Start()
+	return ""
 }
