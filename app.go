@@ -277,3 +277,14 @@ func (a *App) GetCommitGraph(limit int) ([]git.GraphNode, string) {
 	}
 	return nodes, ""
 }
+
+func (a *App) GetUser() (git.GitUser, string) {
+	if a.repository == nil {
+		return git.GitUser{}, "No repository opened"
+	}
+	user, err := a.repository.GetUser()
+	if err != nil {
+		return git.GitUser{}, err.Error()
+	}
+	return user, ""
+}

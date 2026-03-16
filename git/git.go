@@ -318,6 +318,31 @@ func (r *Repository) GetCurrentBranch() (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
+type GitUser struct {
+	Name  string
+	Email string
+}
+
+func (r *Repository) GetUser() (GitUser, error) {
+	cmd := exec.Command("git", "config", "user.name")
+	hideWindowCmd(cmd).Dir = r.Path
+	nameOutput, err := cmd.Output()
+	name := strings.TrimSpace(string(nameOutput))
+	if err != nil {
+		name = ""
+	}
+
+	cmd = exec.Command("git", "config", "user.email")
+	hideWindowCmd(cmd).Dir = r.Path
+	emailOutput, err := cmd.Output()
+	email := strings.TrimSpace(string(emailOutput))
+	if err != nil {
+		email = ""
+	}
+
+	return GitUser{Name: name, Email: email}, nil
+}
+
 func (r *Repository) CheckoutBranch(branchName string) error {
 	var cmd *exec.Cmd
 

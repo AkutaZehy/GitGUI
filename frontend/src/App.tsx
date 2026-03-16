@@ -18,6 +18,7 @@ function App() {
   const [splitPosition, setSplitPosition] = useState({ left: '20%', right: '70%' });
   const [dragTarget, setDragTarget] = useState<'left' | 'right' | null>(null);
   const [tip, setTip] = useState('');
+  const [gitUser, setGitUser] = useState<{ Name: string; Email: string } | null>(null);
 
   const handleMouseDown = (target: 'left' | 'right') => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -90,6 +91,18 @@ function App() {
         }
       } catch (e) {
         console.error("GetCurrentBranch error:", e);
+      }
+
+      // Get git user info
+      try {
+        const userResult = await window.go.main.App.GetUser();
+        console.log("GetUser result:", userResult);
+        if (userResult && typeof userResult === 'object') {
+          const u = userResult as any;
+          setGitUser({ Name: u.Name || u.name || '', Email: u.Email || u.email || '' });
+        }
+      } catch (e) {
+        console.error("GetUser error:", e);
       }
       
       setError('');
@@ -172,6 +185,7 @@ function App() {
       setSelectedFile(null);
       setDiff('');
       setError('');
+      setGitUser(null);
       await loadStatus();
       await loadBranches();
     } catch (e) {
@@ -466,6 +480,11 @@ function App() {
                   {currentBranch.startsWith('(detached') && (
                     <span className="detached-badge">Detached</span>
                   )}
+                </div>
+                <div className="git-user-info">
+                  <div className="git-user-title">Git User</div>
+                  {gitUser?.Name ? <div className="git-user-name">{gitUser.Name}</div> : <div className="git-user-empty">Loading...</div>}
+                  {gitUser?.Email ? <div className="git-user-email">{gitUser.Email}</div> : null}
                 </div>
               </>
             ) : (

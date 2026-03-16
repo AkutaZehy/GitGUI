@@ -54,6 +54,10 @@ export function GetStatus() {
   return window['go']['main']['App']['GetStatus']();
 }
 
+export function GetUser() {
+  return window['go']['main']['App']['GetUser']();
+}
+
 export function OpenDirectoryDialog() {
   return window['go']['main']['App']['OpenDirectoryDialog']();
 }

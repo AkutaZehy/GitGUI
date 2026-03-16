@@ -62,12 +62,22 @@
   gap: 2px;
   overflow: hidden;
   flex: 1;
+  width: 100%;
 }
 
 .commit-hash {
   font-family: monospace;
   font-size: 10px;
   color: #9ca3af;
+  text-align: left;
+}
+
+.commit-message-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  width: 100%;
 }
 
 .commit-message {
@@ -76,6 +86,60 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+}
+
+.message-tooltip-icon {
+  font-size: 10px;
+  color: #6b7280;
+  cursor: help;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #4b5563;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.message-tooltip-icon:hover {
+  color: #9ca3af;
+  border-color: #6b7280;
+}
+
+.message-tooltip {
+  position: fixed;
+  z-index: 10000;
+  background-color: #1e1e1e;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  padding: 8px;
+  min-width: 200px;
+  max-width: 300px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+  color: #e5e7eb;
+  transform: translateX(-50%);
+}
+
+.message-tooltip-hash {
+  font-family: monospace;
+  font-size: 10px;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.message-tooltip-text {
+  font-size: 11px;
+  color: #e5e7eb;
+  word-break: break-word;
+  margin-bottom: 4px;
+}
+
+.message-tooltip-meta {
+  font-size: 10px;
+  color: #6b7280;
 }
 
 .commit-branches {
@@ -84,12 +148,14 @@
   gap: 2px;
   position: relative;
   margin-top: 4px;
+  align-items: center;
 }
 
 .branch-line {
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
+  justify-content: center;
 }
 
 .branch-tag {

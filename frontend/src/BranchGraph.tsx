@@ -104,6 +104,7 @@ const CommitNode = ({ data }: { data: any }) => {
   const branches = data.Branches || [];
   const primaryBranch = branches[0] || '';
   const branchColor = getBranchColor(primaryBranch);
+  const [showMessageTooltip, setShowMessageTooltip] = useState(false);
 
   const maxBranchLen = Math.max(...branches.map((b: string) => b.length), 1);
   const charsPerLine = Math.floor(maxBranchLen * 1.2);
@@ -129,7 +130,8 @@ const CommitNode = ({ data }: { data: any }) => {
   }
 
   const msgWidth = getStringWidth(data.Message);
-  const displayMessage = msgWidth > 40 ? data.Message.substring(0, Math.floor(40 * 0.5)) + '...' : data.Message;
+  const showTooltip = msgWidth > 20;
+  const displayMessage = data.Message;
 
   return (
     <div className="commit-node-container">
@@ -137,14 +139,32 @@ const CommitNode = ({ data }: { data: any }) => {
       <div
         className="commit-circle-wrapper"
         style={{ borderColor: branchColor }}
-        title={`${data.Hash}\n${data.Message}\n${data.Author} - ${data.Date}`}
+        title={`${data.Hash}\n${data.Author} - ${data.Date}`}
       >
         <div className={`commit-circle ${isHead ? 'head' : ''}`} />
       </div>
       <div className="commit-info">
         <div className="commit-hash">{data.ShortHash}</div>
-        <div className="commit-message" title={data.Message}>
-          {displayMessage}
+        <div className="commit-message-row">
+          <div className="commit-message" title={showTooltip ? data.Message : undefined}>
+            {displayMessage}
+          </div>
+          {showTooltip && (
+            <span 
+              className="message-tooltip-icon"
+              onMouseEnter={() => setShowMessageTooltip(true)}
+              onMouseLeave={() => setShowMessageTooltip(false)}
+            >
+              ?
+            </span>
+          )}
+          {showTooltip && showMessageTooltip && (
+            <div className="message-tooltip">
+              <div className="message-tooltip-hash">{data.ShortHash}</div>
+              <div className="message-tooltip-text">{data.Message}</div>
+              <div className="message-tooltip-meta">{data.Author} - {data.Date}</div>
+            </div>
+          )}
         </div>
         {branches.length > 0 && (
           <div className="commit-branches">
@@ -284,6 +304,9 @@ export default function BranchGraph({ repoPath }: BranchGraphProps) {
       >
         <Background color="#3c3c3c" gap={16} />
         <Controls />
+        <Panel position="top-right">
+          <button className="reset-btn" onClick={() => loadGraph()}>Refresh</button>
+        </Panel>
       </ReactFlow>
     </div>
   );

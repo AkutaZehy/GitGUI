@@ -215,6 +215,38 @@ body {
   overflow: hidden;
 }
 
+.git-user-info {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #3c3c3c;
+  font-size: 11px;
+}
+
+.git-user-title {
+  color: #858585;
+  margin-bottom: 4px;
+}
+
+.git-user-name {
+  color: #9ca3af;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.git-user-email {
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.git-user-empty {
+  color: #4b5563;
+  font-style: italic;
+  font-size: 10px;
+}
+
 .branch-label {
   font-size: 12px;
   color: #858585;
