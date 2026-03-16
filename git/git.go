@@ -85,46 +85,83 @@ func (r *Repository) GetStatus() ([]FileStatus, error) {
 			filePath = strings.TrimSpace(line[2:])
 		}
 
-		status := ""
-		isStaged := indexStatus != ' ' && indexStatus != '?'
 		isUntracked := indexStatus == '?'
 
-		switch indexStatus {
-		case 'A':
-			status = "staged"
-		case 'M':
-			status = "modified"
-		case 'D':
-			status = "deleted"
-		case 'R':
-			status = "renamed"
-		case 'C':
-			status = "copied"
-		case 'U':
-			status = "unmerged"
-		case '?':
-			status = "untracked"
-		default:
-			if workTreeStatus == 'M' {
-				status = "modified"
-			} else if workTreeStatus == 'D' {
-				status = "deleted"
-			}
-		}
-
 		if isUntracked {
-			status = "untracked"
+			files = append(files, FileStatus{
+				Path:        filePath,
+				Status:      "untracked",
+				IsStaged:    false,
+				IsUntracked: true,
+			})
+			continue
 		}
 
-		files = append(files, FileStatus{
-			Path:        filePath,
-			Status:      status,
-			IsStaged:    isStaged,
-			IsUntracked: isUntracked,
-		})
+		hasIndexChange := indexStatus != ' ' && indexStatus != '?'
+		hasWorkTreeChange := workTreeStatus != ' ' && workTreeStatus != '?'
+
+		if hasIndexChange && hasWorkTreeChange {
+			indexStatusStr := getStatusFromCode(rune(indexStatus))
+			files = append(files, FileStatus{
+				Path:        filePath,
+				Status:      indexStatusStr,
+				IsStaged:    true,
+				IsUntracked: false,
+			})
+
+			workTreeStatusStr := getStatusFromCode(rune(workTreeStatus))
+			files = append(files, FileStatus{
+				Path:        filePath,
+				Status:      workTreeStatusStr,
+				IsStaged:    false,
+				IsUntracked: false,
+			})
+			continue
+		}
+
+		if hasIndexChange {
+			status := getStatusFromCode(rune(indexStatus))
+			files = append(files, FileStatus{
+				Path:        filePath,
+				Status:      status,
+				IsStaged:    true,
+				IsUntracked: false,
+			})
+			continue
+		}
+
+		if hasWorkTreeChange {
+			status := getStatusFromCode(rune(workTreeStatus))
+			files = append(files, FileStatus{
+				Path:        filePath,
+				Status:      status,
+				IsStaged:    false,
+				IsUntracked: false,
+			})
+			continue
+		}
 	}
 
 	return files, nil
+}
+
+func getStatusFromCode(code rune) string {
+	switch code {
+	case 'A':
+		return "staged"
+	case 'M':
+		return "modified"
+	case 'D':
+		return "deleted"
+	case 'R':
+		return "renamed"
+	case 'C':
+		return "copied"
+	case 'U':
+		return "unmerged"
+	default:
+		return "unknown"
+	}
 }
 
 func (r *Repository) StageFile(filePath string) error {
