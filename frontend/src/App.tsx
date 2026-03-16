@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import './App.css';
+import './BranchGraph.css';
 import { git } from '../wailsjs/go/models';
+import BranchGraph from './BranchGraph';
 
 function App() {
   const [repoPath, setRepoPath] = useState('');
+  const [view, setView] = useState<'main' | 'graph'>('main');
   const [files, setFiles] = useState<git.FileStatus[]>([]);
   const [branches, setBranches] = useState<git.Branch[]>([]);
   const [currentBranch, setCurrentBranch] = useState('');
@@ -412,6 +415,16 @@ function App() {
     <div className="app">
       <div className="toolbar">
         <button onClick={openRepository} disabled={loading}>Open Repository</button>
+        <label className="view-switch">
+          <input
+            type="checkbox"
+            checked={view === 'graph'}
+            onChange={(e) => setView(e.target.checked ? 'graph' : 'main')}
+            disabled={!repoPath}
+          />
+          <span className="switch-slider"></span>
+          <span className="switch-label">Branch View</span>
+        </label>
         <div className="toolbar-right">
           <button onClick={handleTerminal} disabled={!repoPath}>Terminal Here</button>
           <button onClick={async () => { await loadStatus(); setTip('Refreshed'); setTimeout(() => setTip(''), 2000); }} disabled={loading || !repoPath}>Refresh</button>
@@ -425,7 +438,12 @@ function App() {
         {error || tip || 'Ready'}
       </div>
 
-      <div className="main" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+      {view === 'graph' && repoPath ? (
+        <div className="graph-view">
+          <BranchGraph repoPath={repoPath} />
+        </div>
+      ) : (
+        <div className="main" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
         <div className="sidebar" style={{ width: splitPosition.left }}>
           <div className="repo-info">
             {repoPath ? (
@@ -576,6 +594,7 @@ function App() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

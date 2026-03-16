@@ -28,6 +28,7 @@ declare global {
                     GetHunks(filePath: string, staged: boolean): Promise<git.DiffHunk[] | string>;
                     StageHunks(filePath: string, hunkIndices: number[], staged: boolean): Promise<string>;
                     UnstageHunks(filePath: string, hunkIndices: number[]): Promise<string>;
+                    GetCommitGraph(limit: number): Promise<git.GraphNode[] | string>;
                 };
             };
         };

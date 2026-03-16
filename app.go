@@ -266,3 +266,14 @@ func (a *App) UnstageHunks(filePath string, hunkIndices []int) string {
 	}
 	return ""
 }
+
+func (a *App) GetCommitGraph(limit int) ([]git.GraphNode, string) {
+	if a.repository == nil {
+		return nil, "No repository opened"
+	}
+	nodes, err := a.repository.GetCommitGraph(limit)
+	if err != nil {
+		return nil, err.Error()
+	}
+	return nodes, ""
+}

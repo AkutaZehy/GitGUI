@@ -22,6 +22,10 @@ export function GetBranches() {
   return window['go']['main']['App']['GetBranches']();
 }
 
+export function GetCommitGraph(arg1) {
+  return window['go']['main']['App']['GetCommitGraph'](arg1);
+}
+
 export function GetCurrentBranch() {
   return window['go']['main']['App']['GetCurrentBranch']();
 }

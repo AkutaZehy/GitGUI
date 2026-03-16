@@ -12,6 +12,8 @@ export function Fetch():Promise<string|string>;
 
 export function GetBranches():Promise<Array<git.Branch>|string>;
 
+export function GetCommitGraph(arg1:number):Promise<Array<git.GraphNode>|string>;
+
 export function GetCurrentBranch():Promise<string|string>;
 
 export function GetDiff(arg1:string,arg2:boolean):Promise<string|string>;

@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -417,6 +418,93 @@ func (r *Repository) GetRemotes() ([]string, error) {
 	}
 
 	return remotes, nil
+}
+
+type GraphNode struct {
+	Hash      string
+	ShortHash string
+	Message   string
+	Author    string
+	Date      string
+	Parents   []string
+	Branches  []string
+	IsHead    bool
+}
+
+func (r *Repository) GetCommitGraph(limit int) ([]GraphNode, error) {
+	cmd := exec.Command("git", "log", "--all", "--date=short", "--format=%H|%h|%s|%an|%ad|%P|%D", fmt.Sprintf("-%d", limit))
+	hideWindowCmd(cmd).Dir = r.Path
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	var nodes []GraphNode
+	lines := strings.Split(string(output), "\n")
+
+	currentBranch, _ := r.GetCurrentBranch()
+
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+
+		parts := strings.Split(line, "|")
+		if len(parts) < 6 {
+			continue
+		}
+
+		hash := parts[0]
+		shortHash := parts[1]
+		message := parts[2]
+		author := parts[3]
+		date := parts[4]
+
+		var parents []string
+		if parts[5] != "" {
+			parents = strings.Split(parts[5], " ")
+		}
+
+		var branches []string
+		if len(parts) >= 7 && parts[6] != "" {
+			branchesStr := parts[6]
+			branchesStr = strings.ReplaceAll(branchesStr, "HEAD ", "")
+			branches = strings.Split(branchesStr, ", ")
+		}
+
+		isHead := false
+		if hash == currentBranch {
+			isHead = true
+		}
+
+		nodes = append(nodes, GraphNode{
+			Hash:      hash,
+			ShortHash: shortHash,
+			Message:   message,
+			Author:    author,
+			Date:      date,
+			Parents:   parents,
+			Branches:  branches,
+			IsHead:    isHead,
+		})
+	}
+
+	cmd = exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	hideWindowCmd(cmd).Dir = r.Path
+	headOutput, _ := cmd.Output()
+	currentHead := strings.TrimSpace(string(headOutput))
+
+	for i := range nodes {
+		for _, branch := range nodes[i].Branches {
+			branch = strings.TrimPrefix(branch, "origin/")
+			if branch == currentHead || branch == "HEAD" {
+				nodes[i].IsHead = true
+				break
+			}
+		}
+	}
+
+	return nodes, nil
 }
 
 func (r *Repository) DiscardChanges(filePath string) error {

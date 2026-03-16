@@ -114,6 +114,32 @@ export namespace git {
 	        this.IsUntracked = source["IsUntracked"];
 	    }
 	}
+	export class GraphNode {
+	    Hash: string;
+	    ShortHash: string;
+	    Message: string;
+	    Author: string;
+	    Date: string;
+	    Parents: string[];
+	    Branches: string[];
+	    IsHead: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new GraphNode(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Hash = source["Hash"];
+	        this.ShortHash = source["ShortHash"];
+	        this.Message = source["Message"];
+	        this.Author = source["Author"];
+	        this.Date = source["Date"];
+	        this.Parents = source["Parents"];
+	        this.Branches = source["Branches"];
+	        this.IsHead = source["IsHead"];
+	    }
+	}
 
 }
 

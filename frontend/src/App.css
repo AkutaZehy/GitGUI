@@ -109,6 +109,59 @@ body {
   background-color: #0066cc;
 }
 
+.view-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 16px;
+  cursor: pointer;
+  color: #d4d4d4;
+  font-size: 13px;
+}
+
+.view-switch input {
+  display: none;
+}
+
+.switch-slider {
+  width: 36px;
+  height: 20px;
+  background-color: #3c3c3c;
+  border-radius: 10px;
+  position: relative;
+  transition: background-color 0.3s;
+}
+
+.switch-slider::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #fff;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
+
+.view-switch input:checked + .switch-slider {
+  background-color: #3b82f6;
+}
+
+.view-switch input:checked + .switch-slider::before {
+  transform: translateX(16px);
+}
+
+.view-switch input:disabled + .switch-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.graph-view {
+  flex: 1;
+  overflow: hidden;
+}
+
 .main {
   display: flex;
   flex: 1;
