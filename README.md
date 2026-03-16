@@ -11,6 +11,7 @@ Not very practical AI-made wheels, a desktop GUI version of Git.
 
 - **Framework**: Wails v2 (Go backend + WebView frontend)
 - **Frontend**: React + TypeScript + Vite
+- **Frontend Libraries**: reactflow, dagre
 - **Backend**: Go (git CLI)
 - **Target Platform**: Windows
 
@@ -30,7 +31,10 @@ GitGUI/
 ├── frontend/
 │   ├── src/
 │   │   ├── App.tsx
-│   │   └── App.css
+│   │   ├── App.css
+│   │   ├── BranchGraph.tsx
+│   │   ├── BranchGraph.css
+│   │   └── types/
 │   └── package.json
 └── build/
 ```
