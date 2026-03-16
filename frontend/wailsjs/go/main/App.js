@@ -34,6 +34,10 @@ export function GetFileContent(arg1) {
   return window['go']['main']['App']['GetFileContent'](arg1);
 }
 
+export function GetHunks(arg1, arg2) {
+  return window['go']['main']['App']['GetHunks'](arg1, arg2);
+}
+
 export function GetLog(arg1) {
   return window['go']['main']['App']['GetLog'](arg1);
 }
@@ -74,10 +78,18 @@ export function StageFile(arg1) {
   return window['go']['main']['App']['StageFile'](arg1);
 }
 
+export function StageHunks(arg1, arg2, arg3) {
+  return window['go']['main']['App']['StageHunks'](arg1, arg2, arg3);
+}
+
 export function UnstageAll() {
   return window['go']['main']['App']['UnstageAll']();
 }
 
 export function UnstageFile(arg1) {
   return window['go']['main']['App']['UnstageFile'](arg1);
+}
+
+export function UnstageHunks(arg1, arg2) {
+  return window['go']['main']['App']['UnstageHunks'](arg1, arg2);
 }

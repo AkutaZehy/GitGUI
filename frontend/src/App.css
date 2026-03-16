@@ -248,6 +248,16 @@ body {
   overflow-y: auto;
 }
 
+.staged-section .file-list {
+  max-height: 200px;
+}
+
+.unstaged-section .file-list {
+  max-height: none;
+  overflow-y: auto;
+  flex: 1;
+}
+
 .file-item {
   display: flex;
   align-items: center;

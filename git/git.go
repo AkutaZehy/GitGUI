@@ -4,7 +4,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 )
@@ -431,6 +433,247 @@ func (r *Repository) GetFileContent(filePath string) (string, error) {
 		return "", err
 	}
 	return string(content), nil
+}
+
+type DiffHunk struct {
+	Index    int
+	Header   string
+	OldStart int
+	OldLines int
+	NewStart int
+	NewLines int
+	Lines    []HunkLine
+}
+
+type HunkLine struct {
+	Index      int
+	Type       string
+	Content    string
+	OldLineNum int
+	NewLineNum int
+}
+
+func (r *Repository) GetHunks(filePath string, staged bool) ([]DiffHunk, error) {
+	var cmd *exec.Cmd
+	if staged {
+		cmd = exec.Command("git", "diff", "--cached", "-U3", "--", filePath)
+	} else {
+		cmd = exec.Command("git", "diff", "-U3", "--", filePath)
+	}
+	hideWindowCmd(cmd).Dir = r.Path
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	return parseHunks(string(output)), nil
+}
+
+func parseHunks(diffOutput string) []DiffHunk {
+	var hunks []DiffHunk
+	lines := strings.Split(diffOutput, "\n")
+
+	var currentHunk *DiffHunk
+	var lineIndex int
+	hunkIndex := 0
+
+	for _, line := range lines {
+		if strings.HasPrefix(line, "@@") {
+			if currentHunk != nil {
+				hunks = append(hunks, *currentHunk)
+			}
+
+			// Parse hunk header: @@ -oldStart,oldLines +newStart,newLines @@
+			header := strings.TrimSpace(line)
+			match := regexp.MustCompile(`@@ -(\d+),?(\d*) \+(\d+),?(\d*) @@`).FindStringSubmatch(header)
+
+			oldStart, _ := strconv.Atoi(match[1])
+			oldLines := 1
+			if match[2] != "" {
+				oldLines, _ = strconv.Atoi(match[2])
+			}
+			newStart, _ := strconv.Atoi(match[3])
+			newLines := 1
+			if match[4] != "" {
+				newLines, _ = strconv.Atoi(match[4])
+			}
+
+			currentHunk = &DiffHunk{
+				Index:    hunkIndex,
+				Header:   header,
+				OldStart: oldStart,
+				OldLines: oldLines,
+				NewStart: newStart,
+				NewLines: newLines,
+				Lines:    []HunkLine{},
+			}
+			hunkIndex++
+			lineIndex = 0
+			continue
+		}
+
+		if currentHunk == nil {
+			continue
+		}
+
+		// Skip diff headers
+		if strings.HasPrefix(line, "diff") ||
+			strings.HasPrefix(line, "index") ||
+			strings.HasPrefix(line, "---") ||
+			strings.HasPrefix(line, "+++") {
+			continue
+		}
+
+		lineType := "context"
+		content := line
+		oldLineNum := currentHunk.OldStart + lineIndex
+		newLineNum := currentHunk.NewStart + lineIndex
+
+		if strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++") {
+			lineType = "add"
+			content = strings.TrimPrefix(line, "+")
+			newLineNum = currentHunk.NewStart + len(currentHunk.Lines)
+			for _, l := range currentHunk.Lines {
+				if l.Type == "add" {
+					newLineNum--
+				}
+			}
+		} else if strings.HasPrefix(line, "-") && !strings.HasPrefix(line, "---") {
+			lineType = "remove"
+			content = strings.TrimPrefix(line, "-")
+			oldLineNum = currentHunk.OldStart + len(currentHunk.Lines)
+			for _, l := range currentHunk.Lines {
+				if l.Type == "remove" {
+					oldLineNum--
+				}
+			}
+		}
+
+		currentHunk.Lines = append(currentHunk.Lines, HunkLine{
+			Index:      lineIndex,
+			Type:       lineType,
+			Content:    content,
+			OldLineNum: oldLineNum,
+			NewLineNum: newLineNum,
+		})
+		lineIndex++
+	}
+
+	if currentHunk != nil {
+		hunks = append(hunks, *currentHunk)
+	}
+
+	return hunks
+}
+
+func (r *Repository) StageHunks(filePath string, hunkIndices []int, staged bool) error {
+	var cmd *exec.Cmd
+	if staged {
+		cmd = exec.Command("git", "diff", "--cached", "-U0", "--", filePath)
+	} else {
+		cmd = exec.Command("git", "diff", "-U0", "--", filePath)
+	}
+	hideWindowCmd(cmd).Dir = r.Path
+	output, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+
+	hunks := parseHunksForApply(string(output))
+
+	var patchContent string
+	for _, idx := range hunkIndices {
+		if idx >= 0 && idx < len(hunks) {
+			patchContent += hunks[idx] + "\n"
+		}
+	}
+
+	if patchContent == "" {
+		return nil
+	}
+
+	tmpFile, err := os.CreateTemp("", "hunk_*.patch")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.WriteString(patchContent); err != nil {
+		return err
+	}
+	tmpFile.Close()
+
+	if staged {
+		cmd = exec.Command("git", "apply", "--cached", "--ignore-whitespace", tmpFile.Name())
+	} else {
+		cmd = exec.Command("git", "apply", "--ignore-whitespace", tmpFile.Name())
+	}
+	hideWindowCmd(cmd).Dir = r.Path
+	_, err = cmd.Output()
+	return err
+}
+
+func parseHunksForApply(diffOutput string) []string {
+	var hunks []string
+	lines := strings.Split(diffOutput, "\n")
+
+	var currentHunk []string
+	for _, line := range lines {
+		if strings.HasPrefix(line, "@@") {
+			if len(currentHunk) > 0 {
+				hunks = append(hunks, strings.Join(currentHunk, "\n"))
+			}
+			currentHunk = []string{line}
+		} else if len(currentHunk) > 0 {
+			if strings.HasPrefix(line, "diff") ||
+				strings.HasPrefix(line, "index") ||
+				strings.HasPrefix(line, "---") ||
+				strings.HasPrefix(line, "+++") {
+				continue
+			}
+			currentHunk = append(currentHunk, line)
+		}
+	}
+
+	if len(currentHunk) > 0 {
+		hunks = append(hunks, strings.Join(currentHunk, "\n"))
+	}
+
+	return hunks
+}
+
+func (r *Repository) UnstageHunks(filePath string, hunkIndices []int) error {
+	cmd := exec.Command("git", "diff", "--cached", "-U0", "--", filePath)
+	hideWindowCmd(cmd).Dir = r.Path
+	output, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+
+	hunks := parseHunksForApply(string(output))
+
+	var selectedPatch string
+	for _, idx := range hunkIndices {
+		if idx >= 0 && idx < len(hunks) {
+			selectedPatch += hunks[idx] + "\n"
+		}
+	}
+
+	tmpFile, err := os.CreateTemp("", "hunk_*.patch")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.WriteString(selectedPatch); err != nil {
+		return err
+	}
+	tmpFile.Close()
+
+	cmd = exec.Command("git", "apply", "--reverse", "--cached", "--ignore-whitespace", tmpFile.Name())
+	hideWindowCmd(cmd).Dir = r.Path
+	_, err = cmd.Output()
+	return err
 }
 
 func GetRecentRepositories() []string {

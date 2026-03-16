@@ -18,6 +18,8 @@ export function GetDiff(arg1:string,arg2:boolean):Promise<string|string>;
 
 export function GetFileContent(arg1:string):Promise<string|string>;
 
+export function GetHunks(arg1:string,arg2:boolean):Promise<Array<git.DiffHunk>|string>;
+
 export function GetLog(arg1:number):Promise<Array<git.Commit>|string>;
 
 export function GetRepositoryPath():Promise<string>;
@@ -38,6 +40,10 @@ export function StageAll():Promise<string>;
 
 export function StageFile(arg1:string):Promise<string>;
 
+export function StageHunks(arg1:string,arg2:Array<number>,arg3:boolean):Promise<string>;
+
 export function UnstageAll():Promise<string>;
 
 export function UnstageFile(arg1:string):Promise<string>;
+
+export function UnstageHunks(arg1:string,arg2:Array<number>):Promise<string>;

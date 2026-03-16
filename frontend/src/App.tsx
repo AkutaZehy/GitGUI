@@ -580,15 +580,15 @@ function App() {
   );
 }
 
-interface DiffHunk {
+interface ViewDiffHunk {
   header: string;
   lines: { type: 'context' | 'add' | 'remove'; content: string; lineNum?: number }[];
 }
 
-function parseDiff(content: string): DiffHunk[] {
-  const hunks: DiffHunk[] = [];
+function parseDiff(content: string): ViewDiffHunk[] {
+  const hunks: ViewDiffHunk[] = [];
   const lines = content.split('\n');
-  let currentHunk: DiffHunk | null = null;
+  let currentHunk: ViewDiffHunk | null = null;
   let oldLine = 0;
   let newLine = 0;
 

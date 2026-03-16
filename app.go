@@ -233,3 +233,36 @@ func (a *App) OpenTerminal() string {
 	exec.Command("wt.exe", "--title", "GitGUI Terminal", "-d", a.repository.Path).Start()
 	return ""
 }
+
+func (a *App) GetHunks(filePath string, staged bool) ([]git.DiffHunk, string) {
+	if a.repository == nil {
+		return nil, "No repository opened"
+	}
+	hunks, err := a.repository.GetHunks(filePath, staged)
+	if err != nil {
+		return nil, err.Error()
+	}
+	return hunks, ""
+}
+
+func (a *App) StageHunks(filePath string, hunkIndices []int, staged bool) string {
+	if a.repository == nil {
+		return "No repository opened"
+	}
+	err := a.repository.StageHunks(filePath, hunkIndices, staged)
+	if err != nil {
+		return err.Error()
+	}
+	return ""
+}
+
+func (a *App) UnstageHunks(filePath string, hunkIndices []int) string {
+	if a.repository == nil {
+		return "No repository opened"
+	}
+	err := a.repository.UnstageHunks(filePath, hunkIndices)
+	if err != nil {
+		return err.Error()
+	}
+	return ""
+}
